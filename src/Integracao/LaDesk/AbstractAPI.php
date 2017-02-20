@@ -64,10 +64,10 @@ abstract class AbstractAPI
         switch ($this->_client->getParameter(LaDeskParameterConst::LADESK_OAUTH_TYPE))
         {
             case KeyQueryStringAuthentication::class:
-                $this->query->set('apikey', $this->_client->getAuthentication());
+                $this->query->set('apikey', urlencode($this->_client->getAuthentication()));
                 break;
             default:
-                $this->query->set('apikey', $this->_client->getAuthentication());
+                $this->query->set('apikey', urlencode($this->_client->getAuthentication()));
                 break;
         }
 
@@ -96,7 +96,7 @@ abstract class AbstractAPI
             $this->query = $this->_httpClient->getDefaultOption()['query'];
 
         foreach ($params as $key => $value)
-            $this->query->set($key, $value);
+            $this->query->set($key, urlencode($value));
 
         return $this->query;
     }
@@ -173,17 +173,16 @@ abstract class AbstractAPI
         throw new \Exception($message, $ex->getCode(), $ex);
     }
 
-
     /**
-     * @param $param
+     * @param $params
      * @return GuzzleHttp\Message\ResponseInterface
      * @throws \Exception
      */
-    public function adicionar(array $param)
+    public function adicionar(array $params)
     {
         try{
             $this->response = $this->_httpClient->post($this->endpoint, [
-                'json' => $param,
+                'query' => $this->addQueryAdditionalParameters($params)
             ]);
             return $this->getResponse();
         }catch (RequestException $ex) {
@@ -194,16 +193,16 @@ abstract class AbstractAPI
     }
 
     /**
-     * @param $param
+     * @param $params
      * @param $id
      * @return GuzzleHttp\Message\ResponseInterface
      * @throws \Exception
      */
-    public function alterar($id, array $param)
+    public function alterar($id, array $params)
     {
         try{
             $this->response = $this->_httpClient->put(sprintf("%s/%s", $this->endpoint, $id), [
-                'json' => $param,
+                'query' => $this->addQueryAdditionalParameters($params)
             ]);
             return $this->getResponse();
         }catch (RequestException $ex) {
@@ -238,6 +237,14 @@ abstract class AbstractAPI
     public function remover($id)
     {
         try{
+            if(is_array($id))
+            {
+                $this->response = $this->_httpClient->delete(sprintf("%s", $this->endpoint), [
+                    'query' => $this->addQueryAdditionalParameters($id)
+                ]);
+                return $this->getResponse();
+            }
+
             $this->response = $this->_httpClient->delete(sprintf("%s/%s", $this->endpoint, $id));
             return $this->getResponse();
         }catch (RequestException $ex) {

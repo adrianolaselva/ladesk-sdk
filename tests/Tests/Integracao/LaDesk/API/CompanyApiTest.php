@@ -15,7 +15,9 @@ class CompanyApiTest extends PHPUnit
     /**
      * @var CompanyApi
      */
-    private $_companyApi;
+    private $companyApi;
+
+    private static $companyKey;
 
     /**
      * CustomerApiTest constructor.
@@ -23,12 +25,26 @@ class CompanyApiTest extends PHPUnit
     public function __construct()
     {
         parent::__construct();
-        $this->_companyApi = new CompanyApi($this->client);
+        $this->companyApi = new CompanyApi($this->client);
     }
 
-//    public function test_listar()
-//    {
-//        var_dump($this->_companyApi->filtrar([]));
-//    }
+    public function test_filtrar()
+    {
+        $response = $this->companyApi->filtrar([
+            'name' => 'TEST_SDK_ALT'
+        ]);
+
+        $this->assertEquals(200, $response['http']['statusCode']);
+
+        if(isset($response['response']['companies'][0]['id']))
+            self::$companyKey = $response['response']['companies'][0]['id'];
+    }
+
+    public function test_carregar()
+    {
+        $response = $this->companyApi->carregar(self::$companyKey);
+
+        $this->assertEquals(200, $response['http']['statusCode']);
+    }
 
 }
